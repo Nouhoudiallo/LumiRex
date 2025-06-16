@@ -1,4 +1,4 @@
-import { querySchema } from "../schemas/query.schema";
+import { querySchema, loginSchema } from "../schemas/query.schema";
 
 declare type Auth = {
   isAuthenticated: boolean;
@@ -10,3 +10,4 @@ declare type Auth = {
 }
 
 export type ChatFormType = z.infer<typeof querySchema>;
+export type loginSchemaType = z.infer<loginSchema>
