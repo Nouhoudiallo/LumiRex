@@ -1,5 +1,6 @@
 "use client"
 import { useEffect, useState } from "react";
+import { Auth } from "../types";
 
 export async function useAuth(email: string) {
   const [session, setSession] = useState<Auth | null>(null);

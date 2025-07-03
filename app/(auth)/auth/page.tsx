@@ -1,6 +1,6 @@
 "use client";
 import Wrapper from "@/src/components/wrapper";
-import React, { useState } from "react";
+import React, { useState, useTransition } from "react";
 import {
   Card,
   CardContent,
@@ -28,24 +28,35 @@ import {
   FormMessage,
 } from "@/src/components/ui/form";
 import { Input } from "@/src/components/ui/input";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useUserStore } from "@/src/store/user-store";
 
 const AuthPage = () => {
   const [type, setType] = useState<boolean>(false);
   const changeType = () => {
-    setType(!type)
-  }
+    setType(!type);
+  };
   return (
     <Wrapper className="flex items-center justify-center">
-      {type ? <SignInForm onClick={changeType} /> : <SignUpForm onClick={changeType} />}
+      {type ? (
+        <SignInForm onClick={changeType} />
+      ) : (
+        <SignUpForm onClick={changeType} />
+      )}
     </Wrapper>
   );
 };
 
 interface Type {
-  onClick: () => void
+  onClick: () => void;
 }
 
-const SignInForm = ({onClick}:Type) => {
+const SignInForm = ({ onClick }: Type) => {
+  const [ispending, starttransition] = useTransition();
+  const router = useRouter();
+  const setUser = useUserStore((state) => state.setUser);
   // 1. Define your form.
   const form = useForm<z.infer<typeof SignInSchema>>({
     resolver: zodResolver(SignInSchema),
@@ -56,10 +67,28 @@ const SignInForm = ({onClick}:Type) => {
   });
 
   // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof SignInSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
+  function onSubmit(values: SignInSchemaType) {
+    starttransition(async () => {
+      const insert = await fetch("/api/user/signin", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(values),
+      });
+
+      const res = await insert.json();
+
+      if (res.error) {
+        toast.error(res.error);
+        return;
+      }
+      // Stocker l'utilisateur dans le store global
+      setUser(res.data.user);
+      toast.success(res.data.message);
+      setUser(res.user);
+      router.push("/chat");
+    });
   }
 
   return (
@@ -82,7 +111,11 @@ const SignInForm = ({onClick}:Type) => {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="example@gmail.com" {...field} />
+                    <Input
+                      disabled={ispending}
+                      placeholder="example@gmail.com"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -96,20 +129,41 @@ const SignInForm = ({onClick}:Type) => {
                 <FormItem>
                   <FormLabel>Mot de passe</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="*****" {...field} />
+                    <Input
+                      disabled={ispending}
+                      type="password"
+                      placeholder="*****"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" className="cursor-pointer w-full">
-              Se connecter
-            </Button>
+            {ispending ? (
+              <>
+                <Loader2 size={16} className="size-6 animate-spin" />
+                <Button disabled={ispending} type="submit" className="cursor-pointer w-full">
+                  Se connecter
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button disabled={ispending}  type="submit" className="cursor-pointer w-full">
+                  Se connecter
+                </Button>
+              </>
+            )}
           </form>
         </Form>
         <div className="flex items-center">
           <span>Vous n'avez pas de compte?</span>
-          <Button onClick={onClick} variant="link" size="lg" className="cursor-pointer">
+          <Button
+            onClick={onClick}
+            variant="link"
+            size="lg"
+            className="cursor-pointer"
+          >
             s'inscrire
           </Button>
         </div>
@@ -118,7 +172,11 @@ const SignInForm = ({onClick}:Type) => {
   );
 };
 
-const SignUpForm = ({onClick}:Type) => {
+const SignUpForm = ({ onClick }: Type) => {
+  const [ispending, starttransition] = useTransition();
+  const setUser = useUserStore((state) => state.setUser);
+
+  const router = useRouter();
   // 1. Define your form.
   const form = useForm<z.infer<typeof SignUpSchema>>({
     resolver: zodResolver(SignUpSchema),
@@ -130,16 +188,34 @@ const SignUpForm = ({onClick}:Type) => {
 
   // 2. Define a submit handler.
   function onSubmit(values: SignInSchemaType) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
+    starttransition(async () => {
+      const insert = await fetch("/api/user/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+      });
+
+      const res = await insert.json();
+
+      if (res.error) {
+        toast.error(res.error);
+        return;
+      }
+
+      toast.success(res.message);
+      setUser(res.user);
+      router.push("/chat");
+      return;
+    });
   }
 
   return (
     <Card className="w-full max-w-md mx-4">
       <CardHeader>
         <CardTitle>
-          <h1 className="text-3xl text-center text-primary">Inscription</h1>
+          <h1 className="text-3xl text-primary">Inscription</h1>
         </CardTitle>
         <CardDescription>
           Entrez vos identifiant pour vous créer un compte{" "}
@@ -155,7 +231,11 @@ const SignUpForm = ({onClick}:Type) => {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="example@gmail.com" {...field} />
+                    <Input
+                      disabled={ispending}
+                      placeholder="example@gmail.com"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -169,20 +249,38 @@ const SignUpForm = ({onClick}:Type) => {
                 <FormItem>
                   <FormLabel>Mot de passe</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="*****" {...field} />
+                    <Input
+                      disabled={ispending}
+                      type="password"
+                      placeholder="*****"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" className="cursor-pointer w-full">
-              S'inscrire
+            <Button
+              disabled={ispending}
+              type="submit"
+              className="cursor-pointer w-full"
+            >
+              {ispending ? (
+                <Loader2 size={16} className="size-6 animate-spin" />
+              ) : (
+                <span>S'inscrire</span>
+              )}
             </Button>
           </form>
         </Form>
         <div className="flex items-center">
           <span>Vous avez un compte?</span>
-          <Button onClick={onClick} variant="link" size="lg" className="cursor-pointer">
+          <Button
+            onClick={onClick}
+            variant="link"
+            size="lg"
+            className="cursor-pointer"
+          >
             se connecter
           </Button>
         </div>
