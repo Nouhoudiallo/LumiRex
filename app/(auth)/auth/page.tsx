@@ -16,7 +16,7 @@ import {
   SignInSchemaType,
   SignUpSchema,
 } from "@/src/schemas/form.schema";
-import { z } from "zod";
+import { string, z } from "zod";
 
 import { Button } from "@/src/components/ui/button";
 import {
@@ -30,7 +30,7 @@ import {
 import { Input } from "@/src/components/ui/input";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import {  useRouter } from "next/navigation";
 import { useUserStore } from "@/src/store/user-store";
 
 const AuthPage = () => {
@@ -44,7 +44,7 @@ const AuthPage = () => {
         <SignInForm onClick={changeType} />
       ) : (
         <SignUpForm onClick={changeType} />
-      )}
+      )} 
     </Wrapper>
   );
 };
@@ -69,25 +69,23 @@ const SignInForm = ({ onClick }: Type) => {
   // 2. Define a submit handler.
   function onSubmit(values: SignInSchemaType) {
     starttransition(async () => {
-      const insert = await fetch("/api/user/signin", {
+      const add = await fetch("/api/signin", {
         method: "POST",
         headers: {
-          "content-type": "application/json",
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify(values),
-      });
+        body: JSON.stringify(values)
+      })
 
-      const res = await insert.json();
+      const res = await add.json()
 
-      if (res.error) {
-        toast.error(res.error);
-        return;
+      if(res.error){
+        toast.error(res.error)
+        return
       }
-      // Stocker l'utilisateur dans le store global
-      setUser(res.data.user);
-      toast.success(res.data.message);
-      setUser(res.user);
-      router.push("/chat");
+
+      toast.success(res.message)
+      //router.push("/chat")
     });
   }
 
@@ -143,13 +141,21 @@ const SignInForm = ({ onClick }: Type) => {
             {ispending ? (
               <>
                 <Loader2 size={16} className="size-6 animate-spin" />
-                <Button disabled={ispending} type="submit" className="cursor-pointer w-full">
+                <Button
+                  disabled={ispending}
+                  type="submit"
+                  className="cursor-pointer w-full"
+                >
                   Se connecter
                 </Button>
               </>
             ) : (
               <>
-                <Button disabled={ispending}  type="submit" className="cursor-pointer w-full">
+                <Button
+                  disabled={ispending}
+                  type="submit"
+                  className="cursor-pointer w-full"
+                >
                   Se connecter
                 </Button>
               </>
@@ -189,25 +195,23 @@ const SignUpForm = ({ onClick }: Type) => {
   // 2. Define a submit handler.
   function onSubmit(values: SignInSchemaType) {
     starttransition(async () => {
-      const insert = await fetch("/api/user/signup", {
+      const add = await fetch("/api/signup", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify(values),
-      });
+        body: JSON.stringify(values)
+      })
 
-      const res = await insert.json();
+      const res = await add.json()
 
-      if (res.error) {
-        toast.error(res.error);
-        return;
+      if(res.error){
+        toast.error(res.error)
+        return
       }
 
-      toast.success(res.message);
-      setUser(res.user);
-      router.push("/chat");
-      return;
+      toast.success(res.message)
+      router.push("/chat")
     });
   }
 
