@@ -59,9 +59,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
       },
     });
 
-    const tokenExpiry = updateUser.tokenExpiry
-      ? new Date(updateUser.tokenExpiry)
-      : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const tokenExpiry = 604800 // 7d
 
     const response = NextResponse.json({
       message: "Signup successful",
@@ -69,7 +67,8 @@ export async function POST(req: NextRequest, res: NextResponse) {
     });
     response.cookies.set("session_token", generateToken, {
       path: "/",
-      maxAge: 129782
+      maxAge: tokenExpiry,
+      httpOnly: true
     });
 
     return response;

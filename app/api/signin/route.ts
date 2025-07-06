@@ -1,4 +1,4 @@
-import { comparePassword, hashPassword } from "@/src/lib/bcrypt";
+import { comparePassword } from "@/src/lib/bcrypt";
 import { prisma } from "@/src/lib/db";
 import { JwtUtil } from "@/src/lib/jwt";
 import { SignUpSchema } from "@/src/schemas/form.schema";
@@ -45,19 +45,27 @@ export async function POST(req: NextRequest, res: NextResponse) {
         { status: 401 }
       );
     }
+    const token = existingUser.token
 
-    const tokenExpiry = existingUser.tokenExpiry
-      ? new Date(existingUser.tokenExpiry)
-      : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    const veryToken = JwtUtil.verifyToken(token)
+
+    if(!veryToken){
+      return NextResponse.json({
+        error: "Something went wrong"
+      })
+    }
+
+    const tokenExpiry = 604800 // 7d
 
     const response = NextResponse.json({
       message: "SignIn successfuly",
       user: existingUser,
     });
-    const token = existingUser.token
     response.cookies.set("session_token", token, {
       path: "/",
-      maxAge: 129781
+      maxAge: tokenExpiry,
+      httpOnly: true
     });
 
     return response;

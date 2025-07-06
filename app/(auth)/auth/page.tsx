@@ -85,7 +85,7 @@ const SignInForm = ({ onClick }: Type) => {
       }
 
       toast.success(res.message)
-      //router.push("/chat")
+      router.push("/chat")
     });
   }
 
@@ -138,28 +138,17 @@ const SignInForm = ({ onClick }: Type) => {
                 </FormItem>
               )}
             />
-            {ispending ? (
-              <>
+            <Button
+              disabled={ispending}
+              type="submit"
+              className="cursor-pointer w-full"
+            >
+              {ispending ? (
                 <Loader2 size={16} className="size-6 animate-spin" />
-                <Button
-                  disabled={ispending}
-                  type="submit"
-                  className="cursor-pointer w-full"
-                >
-                  Se connecter
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  disabled={ispending}
-                  type="submit"
-                  className="cursor-pointer w-full"
-                >
-                  Se connecter
-                </Button>
-              </>
-            )}
+              ) : (
+                <span>Se connecter</span>
+              )}
+            </Button>
           </form>
         </Form>
         <div className="flex items-center">

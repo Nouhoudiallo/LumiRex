@@ -4,17 +4,17 @@ import { useEffect, useState } from "react"
 
 /**
  * Hook pour gérer un cookie simple et détecter sa présence
- * @param name Nom du cookie
+
  * @param value Valeur du cookie (optionnel)
  * @param days Nombre de jours avant expiration (défaut: 7)
  */
-export function useCookie(name: string, value?: string, days: number = 7) {
+export function useCookie(value?: string, days: number = 7) {
   // S'assurer que le code ne s'exécute que côté client
   const isClient = typeof window !== "undefined" && typeof document !== "undefined";
 
   const getCookie = () => {
     if (!isClient) return undefined;
-    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    const match = document.cookie.match(new RegExp('(^| )' + "session_token" + '=([^;]+)'));
     return match ? match[2] : undefined;
   };
 
@@ -26,7 +26,7 @@ export function useCookie(name: string, value?: string, days: number = 7) {
     if (!isClient) return;
     const expires = new Date();
     expires.setDate(expires.getDate() + days);
-    document.cookie = `${name}=${val}; path=/; expires=${expires.toUTCString()}`;
+    document.cookie = `session_token=${val}; path=/; expires=${expires.toUTCString()}`;
     setCookieValue(val);
     setExists(true);
   };
@@ -34,7 +34,7 @@ export function useCookie(name: string, value?: string, days: number = 7) {
   // Supprimer le cookie
   const removeCookie = () => {
     if (!isClient) return;
-    document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;`;
+    document.cookie = `session_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;`;
     setCookieValue(undefined);
     setExists(false);
   };
@@ -48,7 +48,7 @@ export function useCookie(name: string, value?: string, days: number = 7) {
       setExists(!!val);
     }, 1000); // Vérifie toutes les secondes
     return () => clearInterval(interval);
-  }, [name, isClient]);
+  }, ["session_token", isClient]);
 
   // Si value fourni, créer/mettre à jour le cookie
   useEffect(() => {
