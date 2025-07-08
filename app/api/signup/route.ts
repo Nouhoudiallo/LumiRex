@@ -48,7 +48,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
       },
     });
 
-    const generateToken = JwtUtil.generateToken(newUser, "7d");
+    const generateToken = await JwtUtil.generateToken(newUser, "7d");
 
     const updateUser = await prisma.user.update({
       where: {

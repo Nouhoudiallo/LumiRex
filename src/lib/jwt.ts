@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+import { SignJWT, jwtVerify } from "jose";
 
 export interface JwtUserPayload {
   id: string;
@@ -11,36 +11,53 @@ export class JwtUtil {
 
   /**
    * Génère un token JWT pour un utilisateur donné.
-   * @param user Les informations de l'utilisateur à inclure dans le token (id, email, role).
-   * @param expiresIn Durée de validité du token (ex: '7d' pour 7 jours). Par défaut : 7 jours.
-   * @returns Le token JWT signé.
    */
-  static generateToken(user: JwtUserPayload, expiresIn: string = "7d"): string {
+  static async generateToken(user: JwtUserPayload, expiresIn: string = "7d"): Promise<string> {
     const payload = {
       sub: user.id,
       email: user.email,
       role: user.role,
     };
-    return jwt.sign(payload, this.secret as jwt.Secret, { expiresIn } as jwt.SignOptions);
+    const secret = new TextEncoder().encode(this.secret);
+    // expiresIn en secondes
+    const expires = Math.floor(Date.now() / 1000) + this.parseExpiresIn(expiresIn);
+    return await new SignJWT(payload)
+      .setProtectedHeader({ alg: "HS256" })
+      .setExpirationTime(expires)
+      .sign(secret);
   }
 
   /**
    * Vérifie et décode un token JWT.
-   * @param token Le token JWT à vérifier.
-   * @returns Les informations de l'utilisateur si le token est valide, sinon null.
    */
-  static verifyToken(token: string): JwtUserPayload | null {
+  static async verifyToken(token: string): Promise<JwtUserPayload | null> {
     try {
-      const decoded = jwt.verify(token, this.secret) as JwtUserPayload & {
-        sub: string;
-      };
+      const secret = new TextEncoder().encode(this.secret);
+      const { payload } = await jwtVerify(token, secret);
       return {
-        id: decoded.sub,
-        email: decoded.email,
-        role: decoded.role,
+        id: payload.sub as string,
+        email: payload.email as string,
+        role: payload.role as string,
       };
-    } catch {
+    } catch (e) {
+      console.error("JWT verification failed:", e);
       return null;
+    }
+  }
+
+  /**
+   * Convertit une durée (ex: '7d', '1h') en secondes.
+   */
+  private static parseExpiresIn(expiresIn: string): number {
+    const match = expiresIn.match(/^(\d+)([smhd])$/);
+    if (!match) return 7 * 24 * 60 * 60; // défaut : 7 jours
+    const value = parseInt(match[1], 10);
+    switch (match[2]) {
+      case "s": return value;
+      case "m": return value * 60;
+      case "h": return value * 60 * 60;
+      case "d": return value * 24 * 60 * 60;
+      default: return 7 * 24 * 60 * 60;
     }
   }
 }

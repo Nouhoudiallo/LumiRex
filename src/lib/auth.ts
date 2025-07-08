@@ -1,23 +1,13 @@
-import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
-import { prisma } from "./db";
+// src/lib/auth.ts
+import { cookies } from "next/headers";
+import { JwtUtil } from "./jwt";
 
-import { nextCookies } from "better-auth/next-js";
-// If your Prisma file is located elsewhere, you can change the path
+export async function isAuthenticated() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("session_token")?.value;
 
-export const auth = betterAuth({
-  emailAndPassword: {
-    enabled: true,
-  },
-  database: prismaAdapter(prisma, {
-    provider: "postgresql", // or "mysql", "postgresql", ...etc
-  }),
+  if (!token) return null;
 
-  socialProviders: {
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-    },
-  },
-  plugins: [nextCookies()],
-});
+  const session = JwtUtil.verifyToken(token);
+  return session || null;
+}
