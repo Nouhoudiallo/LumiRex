@@ -4,6 +4,7 @@ import Input from "@/src/components/chat-input";
 import { getUser } from "@/src/actions/user.action";
 import { toast } from "sonner";
 import { createDiscussion } from "@/src/actions/send-question";
+import { redirect } from "next/navigation";
 
 const page = () => {
   const [value, setValue] = useState("");
@@ -20,6 +21,13 @@ const page = () => {
 
       const discu = await createDiscussion(user?.id, value)
       console.log(discu);
+
+      if(!discu.discussion){
+        toast.error("une erreur est suvenue ")
+        return
+      }
+
+      redirect(`/chat/${discu.discussion.id}`)
       
     } catch (error) {
       console.error(error);

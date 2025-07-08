@@ -4,9 +4,9 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest, res : NextResponse) {
     try {
         
-        const { messages, userId, discussionId } = await request.json();
+        const { message, userId, discussionId } = await request.json();
 
-        if (!messages || !userId || !discussionId) {
+        if (!message || !userId || !discussionId) {
             return NextResponse.json({ error: "Field is required" }, { status: 400 });
         }
         
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest, res : NextResponse) {
 
         const question = {
             role: "user",
-            content: messages
+            content: message
         }
 
         const agent = await runAgent(discussionId, question )

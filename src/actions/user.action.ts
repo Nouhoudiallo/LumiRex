@@ -37,7 +37,7 @@ export async function getUser(): Promise<GetUserProps> {
     // Try to find the user in the database with prisma
     const user = await prisma.user.findUnique({
       where: {
-        token: userToken.value,
+        token: userToken.value as string
       },
       select: {
         id: true,

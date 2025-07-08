@@ -2,6 +2,7 @@
 
 import { Discussion } from "../generated/prisma";
 import { prisma } from "../lib/db";
+import { runAgent } from "./agent.action";
 
 interface CreateDiscussionInterface {
   error: boolean;
@@ -45,17 +46,9 @@ export async function createDiscussion(
 
     // send question to the AI service
 
-    const handleQuestion = await fetch(`${process.env.API_URL}/ask`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": process.env.API_KEY || "1gjonypg3igrpg8ul13mnh",
-      },
-      body: JSON.stringify({
-        question: question,
-        discussionId: createDiscu.id,
-        userId: checkUser.id,
-      }),
+    const handleQuestion = await runAgent(createDiscu.id, {
+      role: "user",
+      content: question,
     })
 
     return {
